@@ -1,0 +1,14 @@
+[project]
+name = "cryptolab"
+version = "0.0.0"
+description = "collection of various python tools to experiment with cryptology"
+requires-python = ">= 3.12"
+authors = [
+    {name = "Matt Riley", email = "mcriley821@gmail.com"}
+]
+maintainers = [
+    {name = "Matt Riley", email = "mcriley821@gmail.com"}
+]
+readme = "README.md"
+license = "MIT"
+dependencies = []
