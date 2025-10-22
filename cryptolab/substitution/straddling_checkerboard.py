@@ -1,4 +1,52 @@
+"""
+https://en.wikipedia.org/wiki/Straddling_checkerboard
+"""
+
+
 class Board:
+    """
+    Represents a Straddling Checkerboard cipher board.
+
+    Parameters
+    ----------
+    digits : tuple[str, str]
+        Two distinct digits used to identify the additional rows of the board.
+
+    key : list[int], optional
+        A permutation of digits 0–9 defining the column order.
+        If None, defaults to the natural order [0, 1, 2, ..., 9].
+
+    keyword : str, optional
+        Optional keyword to reorder the alphabet. Unique characters from the
+        keyword are placed first in order of appearance, followed by the remaining
+        unused characters in A–Z followed by '.' and '/'.
+
+    Attributes
+    ----------
+    _key : list[int]
+        The 10-digit permutation used to determine column order.
+
+    _digits : tuple[str, str]
+        The digit labels for the second and third rows.
+
+    _board : dict[str | None, list[str | None]]
+        Mapping from row key (None, digits[0], digits[1]) to a list of 10 symbols.
+
+    Raises
+    ------
+    ValueError
+        If the provided key is not of length 10.
+
+    Examples
+    --------
+    >>> board = Board(('1', '4'), keyword="ASINTOER")
+    >>> board['15']
+    'H'
+    >>> inv = board.invert()
+    >>> inv['H']
+    '15'
+    """
+
     def __init__(
         self,
         digits: tuple[str, str],
@@ -7,7 +55,7 @@ class Board:
         keyword: str = "",
     ):
         if key is None:
-            self._key = [i for i in range(10)]
+            self._key = list(range(10))
         elif len(key) != 10:
             raise ValueError("expected a key of length 10")
         else:
@@ -38,6 +86,26 @@ class Board:
         }
 
     def __getitem__(self, key: str) -> str:
+        """
+        Retrieve a character from the board given its numeric code.
+
+        Parameters
+        ----------
+        key : str
+            A one or two digit string:
+            - one digit: corresponding column from the unlabeled row
+            - two digit: corresponding row-column
+
+        Returns
+        -------
+        str
+            The corresponding character
+
+        Raises
+        ------
+        ValueError
+            If the board does not contain a character for the given key
+        """
         if len(key) == 2:
             row = self._board[key[0]]
         else:
@@ -52,6 +120,14 @@ class Board:
         return d
 
     def invert(self) -> dict[str, str]:
+        """
+        Generate a reverse lookup table mapping characters to numeric code.
+
+        Returns
+        -------
+        dict[str, str]
+            Dictionary mapping characters to corresponding digits.
+        """
         out: dict[str, str] = dict()
         for k, row in self._board.items():
             c = "" if k is None else k
@@ -62,10 +138,62 @@ class Board:
 
     @property
     def digits(self):
+        """
+        The digits that label the second and third rows of the board.
+
+        Returns
+        -------
+        tuple[str, str]
+            The digit labels.
+        """
         return self._digits
+
+    def __str__(self) -> str:
+        a, b = self._digits
+        key_row = "  " + " ".join(str(i) for i in self._key)
+        no_row = "  " + " ".join(i if i else " " for i in self._board[None])
+        a_row = a + " " + " ".join(self._board[a])
+        b_row = b + " " + " ".join(self._board[b])
+        return "\n".join((key_row, no_row, a_row, b_row))
 
 
 def encrypt(plaintext: str, board: Board, *, digit_escape: str = "single") -> str:
+    """
+    Encrypt plaintext using the given Board.
+
+    Parameters
+    ----------
+    plaintext : str
+        Input plaintext. Characters that are not alphanumeric are skipped.
+
+    board : Board
+        The board used for encoding.
+
+    digit_escape : str, default="single"
+        Determines how digits are encoded:
+        - "single": '/' followed by the digit (e.g., "/1/2/3")
+        - "double": two copies of each digit between '/' markers (e.g. "/112233/")
+        - "triple": three copies of each digit between '/' markers (e.g. "/111222333/")
+
+    Returns
+    -------
+    str
+        Resultant ciphertext.
+
+    Raises
+    ------
+    ValueError
+        If `digit_escape` is not one of the supported modes.
+        If `digit_escape` is not "single" and the board character "/" is represented
+        by a single digit code.
+
+    Examples
+    -------
+    >>> board = Board(('1', '4'))
+    >>> encrypt("WE ARE DISCOVERED. FLEE AT ONCE.", board)
+    '4460196510403164361965487136604116153648'
+    """
+
     inv_board = board.invert()
 
     out = ""
@@ -98,6 +226,42 @@ def encrypt(plaintext: str, board: Board, *, digit_escape: str = "single") -> st
 
 
 def decrypt(ciphertext: str, board: Board, *, digit_escape: str = "single") -> str:
+    """
+    Decrypt ciphertext with the given Board.
+
+    Parameters
+    ----------
+    ciphertext : str
+        The ciphertext to decrypt.
+
+    board: Board
+        The board to use for decryption. Must match the board used for encryption.
+
+    digit_escape : str, default="single"
+        Must match what was used for encryption.
+        Determines how digits are encoded:
+        - "single": '/' followed by the digit (e.g., "/1/2/3")
+        - "double": two copies of each digit between '/' markers (e.g. "/112233/")
+        - "triple": three copies of each digit between '/' markers (e.g. "/111222333/")
+
+    Returns
+    -------
+    str
+        The resultant plaintext
+
+    Raises
+    ------
+    ValueError
+       If `digit_escape` is not one of the supported modes.
+       If the ciphertext does not decode properly with the given board.
+
+    Examples
+    --------
+    >>> board = Board(('1', '4'))
+    >>> decrypt('4460196510403164361965487136604116153648', board)
+    'WEAREDISCOVERED.FLEEATONCE.'
+    """
+
     out = ""
 
     i = 0

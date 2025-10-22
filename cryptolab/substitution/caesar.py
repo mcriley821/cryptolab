@@ -1,11 +1,5 @@
 """
-The Caesar cipher is a monoalphabetic substitution cipher that shifts each
-letter of the plaintext by a given shift amount.
-
-Generally, it is used only on alphabetical characters, case insensitively.
-Valid shift values are in the range [0-26).
-
-Also, spaces and punctuation tend to be preserved.
+https://en.wikipedia.org/wiki/Caesar_cipher
 """
 
 
@@ -22,10 +16,13 @@ def encrypt(
     ----------
     text : str
         The message to be enciphered.
+
     shift : int
         The amount to shift each letter.
+
     preserve_space : bool, default=True
         Whether to preserve whitespace in the ciphertext.
+
     preserve_punct : bool, default=True
         Whether to preserve punctuation in the ciphertext.
 
@@ -75,6 +72,7 @@ def decrypt(
     ----------
     ciphertext : str
         The ciphertext to decipher.
+
     shift : int
         The amount to shift each letter.
 

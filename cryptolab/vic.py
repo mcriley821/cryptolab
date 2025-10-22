@@ -4,10 +4,13 @@ https://en.wikipedia.org/wiki/VIC_cipher
 
 from datetime import date
 from operator import add, sub
-from .transposition.sequencing import sequence
+from typing import Callable
+
+from .utils.sequencing import sequence
 from .transposition.disrupted import (
     encrypt as dis_encrypt,
     decrypt as dis_decrypt,
+    VIC,
 )
 from .transposition.columnar import (
     encrypt as col_encrypt,
@@ -20,18 +23,83 @@ from .substitution.straddling_checkerboard import (
 )
 
 
-def _digit_op(x: str, y: str, op) -> str:
+def _digit_op(x: str, y: str, op: Callable[[int, int], int]) -> str:
+    """
+    Perform the given op element-wise on the given numeric strings.
+    The result of calling `op` is reduced modulo 10.
+
+    Parameters
+    ----------
+    x : str
+        Left operand numeric string
+
+    y : str
+        Right operand numeric string
+
+    op : Callable[[int, int], int]
+        Called on int-coerced elements of x and y.
+
+    Returns
+    -------
+    str
+        The resultant numeric string.
+
+    Examples
+    --------
+    >>> _digit_op("123", "789", add)
+    '802'
+    """
+
     return "".join(str(op(int(a), int(b)) % 10) for a, b in zip(x, y))
 
 
 def _seq_to_str(line: str) -> str:
-    result: list[str] = [""] * len(line)
-    for i, j in enumerate(sequence(line, zero_high=True)):
-        result[i] = str((j + 1) % 10)
-    return "".join(result)
+    """
+    Sequence the given numeric string.
+
+    Parameters
+    ----------
+    line : str
+        Numeric string to sequence
+
+    Returns
+    -------
+    str
+        The resultant numeric string.
+
+    Examples
+    --------
+    >>> _seq_to_str("6826372929")
+    '5816472930'
+    """
+
+    return "".join(str((j + 1) % 10) for j in sequence(line, zero_high=True))
 
 
 def _chain_add(num: str, final_len: int) -> str:
+    """
+    Perform chain addition on the numeric string, appending the result until
+    the desired length is reached. Addition is performed modulo 10.
+
+    Parameters
+    ----------
+    num : str
+        The numeric string to chain add.
+
+    final_len : int
+        The desired length.
+
+    Returns
+    -------
+    str
+        The resultant numeric string
+
+    Examples
+    --------
+    >>> _chain_add("12345", 10)
+    '1237835051'
+    """
+
     i = 0
     while len(num) != final_len:
         x, y = int(num[i]), int(num[i + 1])
@@ -43,11 +111,41 @@ def _chain_add(num: str, final_len: int) -> str:
 def key_gen(
     personal_number: int, date: date, phrase: str, key_group: str
 ) -> tuple[list[int], list[int], list[int]]:
+    """
+    Generate VIC columnar transposition key, disrupted transposition key, and
+    straddling checkerboard key following the key generation algorithm as
+    defined by https://en.wikipedia.org/wiki/VIC_cipher
+
+    Parameters
+    ----------
+    personal_number : int
+        A one or two digit personal number that helps determine the length of
+        the transposition keys.
+
+    date : date
+        A key date.
+
+    phrase : str
+        A key phrase.
+
+    key_group : str
+        A 5-digit numeric string that is generally random.
+
+    Returns
+    -------
+    tuple[list[int], list[int], list[int]]
+        A 3-tuple containing:
+            * columnar transposition key
+            * disrupted transposition key
+            * straddling checkerboard key
+        for use with VIC encryption or decryption.
+    """
+
     # Line A: key_group
     line_a = key_group
 
     # Line B: date truncated to 5 digits
-    str_date = f"{date.day}{date.month}{date.year}"
+    str_date = f"{date.day}{date.month}{date.year:04d}"
     line_b = str_date[:5]
 
     # Line C: digit by digit, A - B
@@ -93,6 +191,25 @@ def key_gen(
 
 
 def extract_keygroup(date: date, ciphertext: str) -> tuple[str, str]:
+    """
+    Extract the 5-digit numeric keygroup from the ciphertext.
+
+    Parameters
+    ----------
+    date : date
+        The key date to determine the keygroup index.
+
+    ciphertext : str
+        The ciphertext from which to extract the keygroup.
+
+    Returns
+    -------
+    tuple[str, str]
+        A 2-tuple containing:
+            * the extracted keygroup
+            * the ciphertext with the keygroup removed
+    """
+
     date_str = f"{date.day}{date.month}{date.year}"
     index = int(date_str[5])
     groups = [ciphertext[i : i + 5] for i in range(0, len(ciphertext), 5)]
@@ -101,6 +218,26 @@ def extract_keygroup(date: date, ciphertext: str) -> tuple[str, str]:
 
 
 def inject_keygroup(ciphertext: str, date: date, keygroup: str) -> str:
+    """
+    Inject the keygroup into the ciphertext.
+
+    Parameters
+    ----------
+    ciphertext : str
+        The ciphertext to inject the keygroup into.
+
+    date : date
+        The key date to determine the keygroup index.
+
+    keygroup : str
+        The 5-digit numeric keygroup to inject.
+
+    Returns
+    -------
+    str
+        The ciphertext with the keygroup injected.
+    """
+
     date_str = f"{date.day}{date.month}{date.year}"
     index = int(date_str[5])
     groups = [ciphertext[i : i + 5] for i in range(0, len(ciphertext), 5)]
@@ -115,40 +252,94 @@ def encrypt(
     trans_key2: list[int],
     *,
     null_fill: str = "9",
-):
+) -> str:
+    """
+    Encrypt the plaintext using the VIC algorithm.
+
+    Parameters
+    ----------
+    plaintext : str
+        The plaintext to encrypt.
+
+    board : Board
+        The straddling checkerboard.
+
+    trans_key1 : list[int]
+        The columnar transposition key.
+
+    trans_key2 : list[int]
+        The disrupted transposition key.
+
+    null_fill : str, default="9"
+        A single digit string to fill the ciphertext to a multiple of 5 before
+        transposition.
+
+    Returns
+    -------
+    str
+        The resultant ciphertext.
+    """
+
     out = sad_encrypt(plaintext, board, digit_escape="triple")
     out += null_fill * (-len(out) % 5)
     out = col_encrypt(trans_key1, out)
-    out = dis_encrypt(trans_key2, out)
+    out = dis_encrypt(trans_key2, out, VIC)
     return out
 
 
 def decrypt(
     ciphertext: str, board: Board, trans_key1: list[int], trans_key2: list[int]
-):
-    out = dis_decrypt(trans_key2, ciphertext)
+) -> str:
+    """
+    Decrypt the ciphertext using the VIC algorithm.
+
+    Parameters
+    ----------
+    ciphertext : str
+        The ciphertext to decrypt.
+
+    board : Board
+        The straddling checkerboard.
+
+    trans_key1 : list[int]
+        The columnar transposition key.
+
+    trans_key2 : list[int]
+        The disrupted transposition key.
+
+    Returns
+    -------
+    str
+        The resultant plaintext.
+    """
+    out = dis_decrypt(trans_key2, ciphertext, VIC)
     out = col_decrypt(trans_key1, out)
     out = sad_decrypt(out, board, digit_escape="triple")
     return out
 
 
 if __name__ == "__main__":
-    plaintext = "We are pleased to hear of your success in establishing your false identity You will be sent some money to cover expenses within a month".upper()
+    # https://everything2.com/user/raincomplex/writeups/VIC+cipher
+    text = "IVES INVALIDATED . REPORT IMMEDIATELY TO SAFE HOUSE . AWAIT EXTRACTION INSTRUCTIONS WITHIN WEEK .. ASSIGNED OBJECT"
 
-    keygroup = "77651"
-    phrase = "I DREAM OF JEANNIE WITH T"
+    board = Board(
+        ("3", "4"),
+        key=[2, 9, 6, 0, 5, 8, 1, 7, 3, 4],
+        keyword="ASINTOERBDGJLPUWY.CFHKMQVXZ/",
+    )
+    trans_key1 = [8, 12, 0, 1, 9, 14, 2, 11, 5, 16, 6, 7, 15, 10, 13, 17, 3, 4, 18]
+    trans_key2 = [15, 3, 17, 11, 16, 4, 12, 13, 0, 6, 14, 18, 10, 1, 5, 7, 8, 2, 9, 19]
 
-    # swap month & day for the example: http://www.quadibloc.com/crypto/pp1324.htm
-    date_ = date(1776, 4, 7)
-    pn = 8
+    enc = encrypt(text, board, trans_key1, trans_key2)
+    spaced = " ".join(enc[i : i + 5] for i in range(0, len(enc), 5))
+    print(spaced, "\n")
 
-    trans_key1, trans_key2, board_key = key_gen(pn, date_, phrase, keygroup)
-    board = Board(("0", "8"), key=board_key, keyword="ATONESIR")
+    assert (
+        spaced
+        == "43983 65293 32548 69254 35932 24039 19375 91234 12656 67402 16873 56133 55075 33511 36926 06608 14241 84749 14863 46177 11450 65326 11433 30085 37495 29149"
+    )
 
-    enc = encrypt(plaintext, board, trans_key1, trans_key2)
-    enc = inject_keygroup(enc, date_, keygroup)
-    print([enc[i : i + 5] for i in range(0, len(enc), 5)], "\n")
-
-    keygroup, ciphertext = extract_keygroup(date_, enc)
-    dec = decrypt(ciphertext, board, trans_key1, trans_key2)
+    dec = decrypt(enc, board, trans_key1, trans_key2)
     print(dec)
+
+    assert dec == text.replace(" ", "")  # spaces are skipped
