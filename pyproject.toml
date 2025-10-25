@@ -12,3 +12,11 @@ maintainers = [
 readme = "README.md"
 license = "MIT"
 dependencies = []
+
+[tool.pyright]
+input = [
+  "cryptolab/**/*"
+]
+strict = [
+  "cryptolab/**/*"
+]

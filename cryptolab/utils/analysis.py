@@ -33,7 +33,7 @@ DEFAULT_FREQUENCIES: dict[str, float] = {
 }
 
 
-def frequency_counts(text: str) -> Counter:
+def frequency_counts(text: str) -> Counter[str]:
     """
     Count the occurences of each character in the given text.
 
@@ -179,7 +179,7 @@ def autocorrelation(text: str, top: int = 10) -> list[tuple[int, int]]:
     """
 
     n = len(text)
-    results = []
+    results: list[tuple[int, int]] = []
 
     for shift in range(1, n):
         matches = sum(1 for i in range(n - shift) if text[i] == text[i + shift])
@@ -217,5 +217,5 @@ if __name__ == "__main__":
     print(f"Entropy:     {entropy(ns.text):.4f}")
     print("Autocorrelation:")
     for shift, score in autocorrelation(ns.text):
-        print(f"\t[{shift:2d}]: {score:.4f}")
+        print(f"\t[{shift:2d}]: {score}")
     print()

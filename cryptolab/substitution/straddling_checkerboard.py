@@ -152,8 +152,8 @@ class Board:
         a, b = self._digits
         key_row = "  " + " ".join(str(i) for i in self._key)
         no_row = "  " + " ".join(i if i else " " for i in self._board[None])
-        a_row = a + " " + " ".join(self._board[a])
-        b_row = b + " " + " ".join(self._board[b])
+        a_row = f"{a} {' '.join(i for i in self._board[a] if i)}"
+        b_row = f"{b} {' '.join(i for i in self._board[b] if i)}"
         return "\n".join((key_row, no_row, a_row, b_row))
 
 

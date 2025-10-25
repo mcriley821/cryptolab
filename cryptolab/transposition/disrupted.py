@@ -164,8 +164,8 @@ def _vic_unfill(key: list[int], plaintext: str) -> str:
     'Defend the east wall of the castle'
     """
 
-    h1 = []
-    h2 = []
+    h1: list[str] = []
+    h2: list[str] = []
 
     rows = int(ceil(len(plaintext) / len(key)))
     last = len(plaintext) % len(key)
