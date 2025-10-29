@@ -2,10 +2,10 @@
 https://en.wikipedia.org/wiki/Caesar_cipher
 """
 
-from . import affine
-from ..scoring.ngram import monogram_score
-
 from typing import Callable, Iterator
+
+from ..scoring.ngram import monogram_score
+from . import affine
 
 
 def encrypt(

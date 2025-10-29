@@ -2,13 +2,15 @@
 https://en.wikipedia.org/wiki/Transposition_cipher
 """
 
-from math import ceil
 from dataclasses import dataclass
+from math import ceil
 from typing import Callable
 
 from .columnar import (
-    encrypt as col_encrypt,
     decrypt as col_decrypt,
+)
+from .columnar import (
+    encrypt as col_encrypt,
 )
 
 

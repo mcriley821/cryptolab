@@ -2,9 +2,9 @@
 https://en.wikipedia.org/wiki/Affine_cipher
 """
 
-from ..scoring.ngram import monogram_score
+from typing import Callable, Iterator
 
-from typing import Iterator, Callable
+from ..scoring.ngram import monogram_score
 
 
 def encrypt(

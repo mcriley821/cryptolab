@@ -1,5 +1,5 @@
 from math import ceil, sqrt
-from typing import Literal, Iterator
+from typing import Iterator, Literal
 
 
 def spiral_ccw_in(
@@ -62,7 +62,7 @@ def spiral_ccw_in(
 
 
 if __name__ == "__main__":
-    from ..route import encrypt, decrypt
+    from ..route import decrypt, encrypt
 
     text = "Defend the east wall of the castle"
 

@@ -1,6 +1,5 @@
-from math import log2
 from collections import Counter
-
+from math import log2
 
 # Default frequencies used when computing chi-squared statistic
 DEFAULT_FREQUENCIES: dict[str, float] = {

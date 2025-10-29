@@ -2,8 +2,7 @@
 https://en.wikipedia.org/wiki/Transposition_cipher
 """
 
-from typing import Callable, Iterator
-
+from collections.abc import Callable, Iterator
 
 Route = Callable[[str], Iterator[int]]
 

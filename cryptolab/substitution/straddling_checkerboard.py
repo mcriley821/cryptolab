@@ -39,11 +39,11 @@ class Board:
 
     Examples
     --------
-    >>> board = Board(('1', '4'), keyword="ASINTOER")
-    >>> board['15']
+    >>> board = Board(("1", "4"), keyword="ASINTOER")
+    >>> board["15"]
     'H'
     >>> inv = board.invert()
-    >>> inv['H']
+    >>> inv["H"]
     '15'
     """
 
@@ -189,7 +189,7 @@ def encrypt(plaintext: str, board: Board, *, digit_escape: str = "single") -> st
 
     Examples
     -------
-    >>> board = Board(('1', '4'))
+    >>> board = Board(("1", "4"))
     >>> encrypt("WE ARE DISCOVERED. FLEE AT ONCE.", board)
     '4460196510403164361965487136604116153648'
     """
@@ -257,8 +257,8 @@ def decrypt(ciphertext: str, board: Board, *, digit_escape: str = "single") -> s
 
     Examples
     --------
-    >>> board = Board(('1', '4'))
-    >>> decrypt('4460196510403164361965487136604116153648', board)
+    >>> board = Board(("1", "4"))
+    >>> decrypt("4460196510403164361965487136604116153648", board)
     'WEAREDISCOVERED.FLEEATONCE.'
     """
 

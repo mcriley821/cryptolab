@@ -1,7 +1,6 @@
 from importlib.resources import open_text
 from math import log10
 
-
 _ngram_data = dict[str, float]
 
 
