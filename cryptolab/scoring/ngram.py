@@ -31,7 +31,7 @@ def _score(text: str, data: _ngram_data, window: int) -> float:
     w = ""
     for i, c in enumerate(it):
         if i != 0 and i % window == 0:
-            tot += log10(data.get(w, 0.01))
+            tot += data.get(w, -5)
             w = ""
         w += c
     return tot

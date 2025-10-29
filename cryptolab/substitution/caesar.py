@@ -2,33 +2,31 @@
 https://en.wikipedia.org/wiki/Caesar_cipher
 """
 
-from ..utils.analysis import chi_squared
+from . import affine
+from ..scoring.ngram import monogram_score
 
 from typing import Callable, Iterator
 
 
 def encrypt(
-    text: str,
-    shift: int,
-    preserve_space: bool = True,
-    preserve_punct: bool = True,
+    plaintext: str,
+    key: int,
+    *,
+    preserve_nonalpha: bool = False,
 ) -> str:
     """
     Encrypt plaintext using the Caesar cipher.
 
     Parameters
     ----------
-    text : str
-        The message to be enciphered.
+    plaintext : str
+        The message to be encrypted.
 
-    shift : int
+    key : int
         The amount to shift each letter.
 
-    preserve_space : bool, default=True
-        Whether to preserve whitespace in the ciphertext.
-
-    preserve_punct : bool, default=True
-        Whether to preserve punctuation in the ciphertext.
+    preserve_nonalpha : bool, default=False
+        Whether to preserve non-alphebeticals in the ciphertext.
 
     Returns
     -------
@@ -37,38 +35,20 @@ def encrypt(
 
     Examples
     --------
-    >>> caesar.encrypt("Hello, world!", 3)
+    >>> encrypt("Hello, world!", 3, preserve_space=True, preserve_symbols=True)
     'Khoor, zruog!'
 
-    >>> caesar.encrypt("Hello, world!", 3, False, False)
+    >>> encrypt("Hello, world!", 3)
     'Khoorzruog'
     """
-    shift %= 26
-
-    ret = ""
-    for char in text:
-        if char.isspace() and preserve_space:
-            ret += char
-            continue
-
-        if not char.isalpha():
-            if preserve_punct:
-                ret += char
-            continue
-
-        offset = ord("A") if char.isupper() else ord("a")
-
-        index = ord(char) - offset  # subtract offset to get a zero-based index
-        shifted = (index + shift) % 26  # shift, looping to 'A' if necessary
-        ret += chr(shifted + offset)  # add back offset for ascii index
-
-    return ret
+    return affine.encrypt(
+        plaintext,
+        (1, key),
+        preserve_nonalpha=preserve_nonalpha,
+    )
 
 
-def decrypt(
-    ciphertext: str,
-    shift: int,
-) -> str:
+def decrypt(ciphertext: str, key: int) -> str:
     """
     Decrypt ciphertext using the Caesar cipher.
 
@@ -77,7 +57,7 @@ def decrypt(
     ciphertext : str
         The ciphertext to decipher.
 
-    shift : int
+    key : int
         The amount to shift each letter.
 
     Returns
@@ -87,25 +67,13 @@ def decrypt(
 
     Examples
     --------
-    >>> caesar.decrypt("Khoor, zruog!", 3)
+    >>> decrypt("Khoor, zruog!", 3)
     'Hello, world!'
     """
-
-    ret = ""
-    for char in ciphertext:
-        if not char.isalpha():
-            ret += char
-            continue
-
-        offset = ord("A") if char.isupper() else ord("a")
-        index = ord(char) - offset  # subtract offset to get a zero-based index
-        shifted = (index - shift) % 26  # shift, looping to 'Z' if necessary
-        ret += chr(shifted + offset)  # add back offset for ascii index
-
-    return ret
+    return affine.decrypt(ciphertext, (1, key))
 
 
-def brute_force(ciphertext: str) -> Iterator[str]:
+def brute_force(ciphertext: str) -> Iterator[tuple[str, int]]:
     """
     Brute force decrypt the ciphertext.
 
@@ -116,14 +84,17 @@ def brute_force(ciphertext: str) -> Iterator[str]:
 
     Returns
     -------
-    Iterator[str]
-        An iterator yielding all possible Caesar decryptions.
+    Iterator[tuple[str, int]]
+        An iterator yielding all possible Caesar decryptions paired with their
+        key. There are 26 possible decryptions.
     """
     for i in range(26):
-        yield decrypt(ciphertext, i)
+        yield (decrypt(ciphertext, i), i)
 
 
-def crack(ciphertext: str, *, score: Callable[[str], float] = chi_squared) -> str:
+def crack(
+    ciphertext: str, *, score: Callable[[str], float] = monogram_score
+) -> tuple[str, int]:
     """
     Crack the decryption of the ciphertext using the score function.
 
@@ -133,50 +104,46 @@ def crack(ciphertext: str, *, score: Callable[[str], float] = chi_squared) -> st
         The ciphertext to crack.
 
     score : Callable[[str], float], default=chi_squared
-        The score function which treats lower values as more likely to be a
+        The score function which treats higher values as more likely to be a
         valid decryption.
 
     Returns
     -------
-    str
-        The lowest scoring decryption.
+    tuple[str, int]
+        The best scoring decryption paired with its key.
 
     Examples
     --------
     >>> crack("iq mdq pueoahqdqp rxqq mf azoq")
     'we are discovered flee at once'
-
-    Notes
-    -----
-    TODO: replace the score function type with one from a scoring module
     """
-    top: tuple[str, float] = ("", float("inf"))
+    top: tuple[str, int, float] = ("", -1, -float("inf"))
 
-    for text in brute_force(ciphertext):
-        if (sc := score(text)) < top[1]:
-            top = (text, sc)
+    for text, key in brute_force(ciphertext):
+        sc = score(text)
+        if sc > top[2]:
+            top = (text, key, sc)
 
-    return top[0]
+    return top[0], top[1]
 
 
 if __name__ == "__main__":
     from random import randint
 
     plaintext = "we are discovered flee at once"
-    shift = randint(1, 25)
+    key = randint(1, 25)
 
-    enc = encrypt(plaintext, shift)
+    print(f"key: {key}")
+
+    enc = encrypt(plaintext, key, preserve_nonalpha=True)
     print(enc, "\n")
 
-    dec = decrypt(enc, shift)
+    dec = decrypt(enc, key)
     print(dec, "\n")
 
     cracked = crack(enc)
     print(cracked, "\n")
 
-    for i in brute_force(enc):
-        print(i)
-    print()
-
     assert dec == plaintext
-    assert dec == cracked
+    assert dec == cracked[0]
+    assert key == cracked[1]
