@@ -1,7 +1,8 @@
 from importlib.resources import open_text
 from math import log10
 
-_ngram_data = dict[str, float]
+# ngram data holds the ngram lookup table and floor value
+_ngram_data = tuple[dict[str, float], float]
 
 
 def _load_data(
@@ -21,19 +22,16 @@ def _load_data(
     for k, v in data.items():
         data[k] = log10(v / n)
 
-    return data
+    return data, log10(0.01 / n)
 
 
 def _score(text: str, data: _ngram_data, window: int) -> float:
-    it = filter(lambda x: x.isalpha(), iter(text.upper()))
-    tot = 0.0
-    w = ""
-    for i, c in enumerate(it):
-        if i != 0 and i % window == 0:
-            tot += data.get(w, -5)
-            w = ""
-        w += c
-    return tot
+    lut, floor = data
+    total = 0.0
+    for i in range(len(text) - window + 1):
+        total += lut.get(text[i : i + window].upper(), floor)
+
+    return total
 
 
 _monogram_data: _ngram_data | None = None
