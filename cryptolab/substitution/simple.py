@@ -2,13 +2,7 @@
 
 from string import ascii_uppercase
 
-
-def _make_alphabet(key: str) -> str:
-    alphabet = dict.fromkeys(ascii_uppercase)
-    key_chars = dict.fromkeys(key.upper())
-    for k in key_chars:
-        del alphabet[k]
-    return "".join(key_chars) + "".join(alphabet)
+from ..utils.keys import keyed_alphabet
 
 
 def encrypt(
@@ -44,7 +38,7 @@ def encrypt(
     if not key.isalpha():
         raise ValueError("key must be alphabetical")
 
-    alphabet = _make_alphabet(key)
+    alphabet = keyed_alphabet(key)
     trans = str.maketrans(ascii_uppercase, alphabet)
 
     ret = ""
@@ -87,7 +81,7 @@ def decrypt(ciphertext: str, key: str) -> str:
     if not key.isalpha():
         raise ValueError("key must be alphabetical")
 
-    alphabet = _make_alphabet(key)
+    alphabet = keyed_alphabet(key)
     trans = str.maketrans(alphabet, ascii_uppercase)
 
     ret = ""
