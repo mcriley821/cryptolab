@@ -46,19 +46,32 @@ def decrypt(ciphertext: str, route: Route, *, pad: str = "\0") -> str:
         The resultant plaintext.
     """
     c = ciphertext
-    ret = ["\0"] * len(c)
-    for i, j in zip(c, route(c)):
+    rout = list(route(c))
+    ret = [pad] * len(rout)
+    for i, j in zip(c, rout):
         ret[j] = i
     return "".join(ret).strip(pad)
 
 
 if __name__ == "__main__":
-    from .routes.spiral import spiral_ccw_in
+    from .routes import spirals
 
     text = "Defend the east wall of the castle"
+    print(text, "\n")
 
-    enc = encrypt(text, spiral_ccw_in)
+    # D e f e n d
+    #   t h e   e
+    # a s t   w a
+    # l l   o f
+    # t h e   c a
+    # s t l e
+
+    enc = encrypt(text, spirals.ccw_in)
     print(enc, "\n")
 
-    dec = decrypt(text, spiral_ccw_in)
+    assert enc == "D altstle\0\0a aednefetslhe cfw eht o "
+
+    dec = decrypt(enc, spirals.ccw_in)
     print(dec)
+
+    assert dec == text

@@ -2,7 +2,7 @@ from math import ceil, sqrt
 from typing import Iterator, Literal
 
 
-def spiral_ccw_in(
+def ccw_in(
     text: str,
     *,
     size: tuple[int, int] | Literal["sqr"] = "sqr",
@@ -65,11 +65,12 @@ if __name__ == "__main__":
     from ..route import decrypt, encrypt
 
     text = "Defend the east wall of the castle"
+    print(text, "\n")
 
-    enc = encrypt(text, spiral_ccw_in)
+    enc = encrypt(text, ccw_in)
     print(enc, "\n")
 
-    dec = decrypt(enc, spiral_ccw_in)
+    dec = decrypt(enc, ccw_in)
     print(dec)
 
     assert dec == text
