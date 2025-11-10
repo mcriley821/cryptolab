@@ -70,9 +70,9 @@ class Board:
             for k in key_chars:
                 del alphabet_set[k]
 
-        alphabet = "".join(key_chars) + "".join(alphabet_set)
-        assert len(alphabet) == 28
-        it = iter(alphabet)
+        self._alphabet = "".join(key_chars) + "".join(alphabet_set)
+        assert len(self._alphabet) == 28
+        it = iter(self._alphabet)
 
         row1: list[str | None] = [None] * 10
         for i, j in enumerate(self._key):
@@ -137,7 +137,7 @@ class Board:
         return out
 
     @property
-    def digits(self):
+    def digits(self) -> tuple[str, str]:
         """
         The digits that label the second and third rows of the board.
 
@@ -148,7 +148,39 @@ class Board:
         """
         return self._digits
 
+    @property
+    def key(self) -> list[int]:
+        """
+        The column-wise key of the board.
+
+        Returns
+        -------
+        list[int]
+            The key.
+        """
+        return self._key.copy()
+
+    @property
+    def alphabet(self) -> str:
+        """
+        The alphabet of the board, by rows.
+
+        Returns
+        -------
+        str
+            The alphabet.
+        """
+        return self._alphabet
+
     def __str__(self) -> str:
+        """
+        Get a string representation of the board.
+
+        Returns
+        -------
+        str
+            The representation of the board.
+        """
         a, b = self._digits
         key_row = "  " + " ".join(str(i) for i in self._key)
         no_row = "  " + " ".join(i if i else " " for i in self._board[None])
@@ -296,14 +328,17 @@ def decrypt(ciphertext: str, board: Board, *, digit_escape: str = "single") -> s
 
 
 if __name__ == "__main__":
-    board = Board(("1", "4"), keyword="FUBCDORA.LETHINGKYMVPS.JQZXW")
+    board = Board(("1", "4"), keyword="FUBCDORA.LETHINGKYMVPS/JQZXW")
 
     plaintext = "INCASEYOUMANAGETOCRACKTHISTHEPRIVATEKEYSBELONGTOHALFANDBETTERHALFANDTHEYALSONEEDFUNDSTOLIVE"
+
+    print(plaintext)
+    print(board)
 
     enc = encrypt(plaintext, board, digit_escape="triple")
     print(enc, "\n")
 
     dec = decrypt(enc, board, digit_escape="triple")
-    print(dec)
+    print(dec, "\n")
 
     assert dec == plaintext
