@@ -2,6 +2,15 @@
 https://en.wikipedia.org/wiki/Straddling_checkerboard
 """
 
+from collections.abc import Callable
+from functools import partial
+from itertools import combinations
+from random import choice, randint, shuffle
+from string import ascii_uppercase
+
+from ..scoring.ngram import trigram_score
+from ..utils.anneal import anneal
+
 
 class Board:
     """
@@ -188,6 +197,71 @@ class Board:
         b_row = f"{b} {' '.join(i for i in self._board[b] if i)}"
         return "\n".join((key_row, no_row, a_row, b_row))
 
+    @staticmethod
+    def random() -> "Board":
+        """
+        Generate a randomized Board.
+
+        Returns
+        -------
+        Board
+            A Board with random digits, key, and alphabet.
+        """
+        a = randint(0, 9)
+        while (b := randint(0, 9)) == a:
+            ...
+
+        digs = (str(a), str(b))
+
+        key = list(range(10))
+        shuffle(key)
+
+        alph = list(ascii_uppercase)
+        shuffle(alph)
+
+        return Board(digs, key, keyword="".join(alph))
+
+    def random_mutation(self) -> "Board":
+        """
+        Get a random mutation of this board.
+
+        Returns
+        -------
+        Board
+            A new Board with the random mutation.
+
+        Notes
+        -----
+        There are a total of 432 possible mutations:
+        * 9 digit mutations (8 replace, 1 swap)
+        * 45 key mutations
+        * 378 alphabet mutations
+        """
+        r = randint(0, 2)
+        if r == 0:
+            r = randint(0, 2)
+            a, b = self._digits
+            if r == 0:  # swap digits
+                return Board((b, a), self.key, keyword=self._alphabet)
+
+            i = choice(tuple(set(map(str, range(10))) - set(self._digits)))
+            if r == 1:  # replace first digit
+                return Board((i, b), self.key, keyword=self._alphabet)
+
+            return Board((a, i), self.key, keyword=self._alphabet)
+
+        if r == 1:
+            key = self.key
+            a, b = choice(tuple(combinations(range(len(key)), 2)))
+            key[a], key[b] = key[b], key[a]
+            return Board(self._digits, key, keyword=self._alphabet)
+
+        # r == 2
+        alph = list(self._alphabet)
+        a, b = choice(tuple(combinations(range(len(alph)), 2)))
+        alph[a], alph[b] = alph[b], alph[a]
+        return Board(self._digits, self.key, keyword="".join(alph))
+
 
 def encrypt(plaintext: str, board: Board, *, digit_escape: str = "single") -> str:
     """
@@ -327,6 +401,41 @@ def decrypt(ciphertext: str, board: Board, *, digit_escape: str = "single") -> s
     return out
 
 
+def crack(
+    ciphertext: str,
+    *,
+    score: Callable[[str], float] = trigram_score,
+    digit_escape: str = "single",
+) -> tuple[str, Board]:
+    """
+    Crack the ciphertext by finding the best decryption Board via annealing.
+
+    Parameters
+    ----------
+    ciphertext : str
+        The ciphertext to crack.
+
+    score : Callable[[str], float],default=trigram_score
+        Scoring function to use.
+
+    digit_escape : str,default="single"
+        Digit escape when decrypting. See decrypt for more info.
+
+    Returns
+    -------
+    tuple[str, Board]
+        The highest scoring plaintext and corresponding Board
+    """
+
+    return anneal(
+        ciphertext,
+        Board.random,
+        Board.random_mutation,
+        partial(decrypt, digit_escape=digit_escape),
+        score,
+    )
+
+
 if __name__ == "__main__":
     board = Board(("1", "4"), keyword="FUBCDORA.LETHINGKYMVPS/JQZXW")
 
@@ -342,3 +451,7 @@ if __name__ == "__main__":
     print(dec, "\n")
 
     assert dec == plaintext
+
+    dec, board = crack(enc, digit_escape="triple")
+    print(dec)
+    print(board)

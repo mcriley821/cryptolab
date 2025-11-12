@@ -99,75 +99,40 @@ def anneal(
 
 if __name__ == "__main__":
     from itertools import combinations
-    from random import choice, randint, shuffle
+    from random import choice, shuffle
     from string import ascii_uppercase
 
     from ..scoring.ngram import trigram_score
-    from ..substitution.straddling_checkerboard import (
-        Board,
-    )
-    from ..substitution.straddling_checkerboard import (
-        decrypt as sad_decrypt,
-    )
-    from ..substitution.straddling_checkerboard import (
-        encrypt as sad_encrypt,
-    )
-
-    def board_gen() -> Board:
-        a = randint(0, 9)
-        while (b := randint(0, 9)) == a:
-            ...
-
-        digs = (str(a), str(b))
-
-        key = list(range(10))
-        shuffle(key)
-
-        alph = list(ascii_uppercase)
-        shuffle(alph)
-
-        return Board(digs, key, keyword="".join(alph))
-
-    def mutate(board: Board) -> Board:
-        r = randint(0, 2)
-        if r == 0:
-            r = randint(0, 2)
-            a, b = board.digits
-            if r == 0:  # swap digits
-                return Board((b, a), board.key, keyword=board.alphabet)
-            i = choice(tuple(set(map(str, range(10))) - set(board.digits)))
-            if r == 1:  # replace first digit
-                return Board((i, b), board.key, keyword=board.alphabet)
-            return Board((a, i), board.key, keyword=board.alphabet)
-
-        if r == 1:
-            a, b = choice(tuple(combinations(range(len(board.key)), 2)))
-            key = board.key
-            key[a], key[b] = key[b], key[a]
-            return Board(board.digits, key, keyword=board.alphabet)
-
-        # r == 2
-        a, b = choice(tuple(combinations(range(len(board.alphabet)), 2)))
-        alph = list(board.alphabet)
-        alph[a], alph[b] = alph[b], alph[a]
-        return Board(board.digits, board.key, keyword="".join(alph))
+    from ..substitution import simple
 
     plaintext = "Simulated annealing is a probabilistic technique for approximating the global optimum of a given function. Specifically, it is a metaheuristic to approximate global optimization in a large search space for an optimization problem."
-    board = board_gen()
+
+    def gen_key() -> str:
+        key = list(ascii_uppercase)
+        shuffle(key)
+        return "".join(key)
+
+    def mutate(key: str) -> str:
+        lkey = list(key)
+        a, b = choice(tuple(combinations(range(len(lkey)), 2)))
+        lkey[a], lkey[b] = lkey[b], lkey[a]
+        return "".join(lkey)
+
+    key = gen_key()
 
     print(plaintext)
-    print(board)
+    print(key, "\n")
 
-    enc = sad_encrypt(plaintext, board)
+    enc = simple.encrypt(plaintext, key)
     print(enc, "\n")
 
-    dec, key = anneal(
+    dec, bkey = anneal(
         enc,
-        board_gen,
+        gen_key,
         mutate,
-        sad_decrypt,
+        simple.decrypt,
         trigram_score,
     )
 
     print(dec)
-    print(key)
+    print(bkey)
