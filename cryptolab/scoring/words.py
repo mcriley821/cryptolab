@@ -243,7 +243,7 @@ def word_score(text: str) -> float:
     float
         The calculated score.
     """
-    return _scorer.score(text)
+    return _scorer.score(text.upper())
 
 
 def word_segments(text: str) -> list[str]:
@@ -260,7 +260,7 @@ def word_segments(text: str) -> list[str]:
     list[str]
         List of segmented words.
     """
-    return _scorer.segment(text)
+    return _scorer.segment(text.upper())
 
 
 if __name__ == "__main__":

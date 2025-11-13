@@ -2,6 +2,8 @@
 https://en.wikipedia.org/wiki/Straddling_checkerboard
 """
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from functools import partial
 from itertools import combinations
@@ -145,6 +147,31 @@ class Board:
                     out[s] = c + str(j)
         return out
 
+    def normalize(self) -> Board:
+        """
+        Normalize the board. This rearranges the alphabet to have sorted key
+        and digits. This does not affect decryption in any way, this Board and
+        the returned Board are equivalent.
+
+        Returns
+        -------
+        Board
+            A new Board with sorted key and digits.
+        """
+        if self._key == sorted(self.key):
+            return self
+
+        alph = ""
+        a, b = sorted(self._digits)
+
+        for j in ("", a, b):
+            for i in map(str, range(10)):
+                if j == "" and i in self._digits:
+                    continue
+                alph += self[j + i]
+
+        return Board((a, b), keyword=alph)
+
     @property
     def digits(self) -> tuple[str, str]:
         """
@@ -198,7 +225,7 @@ class Board:
         return "\n".join((key_row, no_row, a_row, b_row))
 
     @staticmethod
-    def random() -> "Board":
+    def random() -> Board:
         """
         Generate a randomized Board.
 
@@ -221,7 +248,7 @@ class Board:
 
         return Board(digs, key, keyword="".join(alph))
 
-    def random_mutation(self) -> "Board":
+    def random_mutation(self) -> Board:
         """
         Get a random mutation of this board.
 
@@ -437,6 +464,8 @@ def crack(
 
 
 if __name__ == "__main__":
+    from ..scoring.words import word_score, word_segments
+
     board = Board(("1", "4"), keyword="FUBCDORA.LETHINGKYMVPS/JQZXW")
 
     plaintext = "INCASEYOUMANAGETOCRACKTHISTHEPRIVATEKEYSBELONGTOHALFANDBETTERHALFANDTHEYALSONEEDFUNDSTOLIVE"
@@ -452,6 +481,10 @@ if __name__ == "__main__":
 
     assert dec == plaintext
 
-    dec, board = crack(enc, digit_escape="triple")
+    def score(text: str) -> float:
+        return trigram_score(text) + word_score(text)
+
+    dec, board = crack(enc, score=score, digit_escape="triple")
     print(dec)
-    print(board)
+    print(" ".join(word_segments(dec)))
+    print(board.normalize())
