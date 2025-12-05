@@ -267,7 +267,9 @@ def word_segments(text: str) -> list[str]:
 
 
 if __name__ == "__main__":
-    text = "ATTACKTHEEASTWALLOFTHECASTLEATDAWN"
+    import sys
+
+    text = sys.argv[1]
     score, segmentation = word_analyze(text)
 
     print(f"Text: {text}")

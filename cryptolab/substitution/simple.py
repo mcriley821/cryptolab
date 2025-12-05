@@ -23,7 +23,7 @@ def encrypt(
         The key word to use in the alphabet construction.
 
     preserve_nonalpha : bool,default=False
-        Whether to preserve non alphabeticals in the ciphertext.
+        Whether to preserve non-alphabeticals in the ciphertext.
 
     Raises
     ------

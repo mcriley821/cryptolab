@@ -19,7 +19,7 @@ def encrypt(
         The plaintext to encrypt.
 
     preserve_nonalpha : bool,default=False
-        Whether to preserve spaces in the ciphertext.
+        Whether to preserve non-alphabeticals in the ciphertext.
 
     Returns
     -------

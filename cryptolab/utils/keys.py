@@ -69,7 +69,7 @@ def keyword(word: str, *, alphabet: str | None = None) -> list[int]:
     Examples
     --------
     >>> keyword("CIPHER")
-    [2, 0, 0, 0, 4, 0]
+    [2, 8, 15, 7, 4, 17]
 
     >>> keyword("cipher")
     []
@@ -81,3 +81,9 @@ def keyword(word: str, *, alphabet: str | None = None) -> list[int]:
         alphabet = ascii_uppercase if word.isupper() else ascii_lowercase
 
     return [alphabet.index(i) for i in word if i in alphabet]
+
+
+if __name__ == "__main__":
+    import sys
+
+    print(keyword(sys.argv[1]))

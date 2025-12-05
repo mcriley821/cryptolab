@@ -25,7 +25,7 @@ def encrypt(
         A list of shifts to use as the key.
 
     preserve_nonalpha : bool,default=False
-        Whether to preserve nonalphabeticals in the ciphertext.
+        Whether to preserve non-alphabeticals in the ciphertext.
 
     Returns
     -------

@@ -28,7 +28,7 @@ def encrypt(
         A tuple representing the (a, b) coefficients.
 
     preserve_nonalpha : bool,default=False
-        Whether to preserve non-alphabetical in the ciphertext.
+        Whether to preserve non-alphabeticals in the ciphertext.
 
     Raises
     ------
