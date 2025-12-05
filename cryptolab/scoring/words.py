@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from importlib.resources import files
 from math import log10
+from threading import Lock
 
 
 @dataclass(slots=True)
@@ -13,6 +14,7 @@ class _WordScorer:
     """
 
     _loaded: bool = False
+    _lock: Lock = Lock()
 
     # first-order word probabilities
     _Pw: dict[str, float] = field(default_factory=dict[str, float])
@@ -50,32 +52,33 @@ class _WordScorer:
         second_order_file : str, default="count_2w.txt"
             Name of the second-order word frequency file.
         """
-        if self._loaded:
-            return
+        with self._lock:
+            if self._loaded:
+                return
 
-        self._n = n
+            self._n = n
 
-        with (files(module) / first_order_file).open() as f:
-            for line in f:
-                word, countStr = line.strip().split("\t")
-                count = int(countStr)
-                self._Pw[word.upper()] = self._Pw.get(word.upper(), 0) + count
+            with (files(module) / first_order_file).open() as f:
+                for line in f:
+                    word, countStr = line.strip().split("\t")
+                    count = int(countStr)
+                    self._Pw[word.upper()] = self._Pw.get(word.upper(), 0) + count
 
-        for k, v in list(self._Pw.items()):
-            self._Pw[k] = log10(v / self._n)
+            for k, v in list(self._Pw.items()):
+                self._Pw[k] = log10(v / self._n)
 
-        with (files(module) / second_order_file).open() as f:
-            for line in f:
-                key, count = line.strip().split("\t")
-                key = key.upper()
-                self._Pw2[key] = self._Pw2.get(key, 0) + int(count)
+            with (files(module) / second_order_file).open() as f:
+                for line in f:
+                    key, count = line.strip().split("\t")
+                    key = key.upper()
+                    self._Pw2[key] = self._Pw2.get(key, 0) + int(count)
 
-        for key, v in self._Pw2.items():
-            w1, _ = key.split()
-            self._Pw2[key] = log10(v / self._n) - self._Pw.get(w1, 0)
+            for key, v in self._Pw2.items():
+                w1, _ = key.split()
+                self._Pw2[key] = log10(v / self._n) - self._Pw.get(w1, 0)
 
-        self._unseen = [log10(10.0 / (self._n * 10**L)) for L in range(50)]
-        self._loaded = True
+            self._unseen = [log10(10.0 / (self._n * 10**L)) for L in range(50)]
+            self._loaded = True
 
     def _cPw(self, word: str, prev: str = "<UNK>") -> float:
         """

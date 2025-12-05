@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from importlib.resources import files
 from math import log10
+from threading import Lock
 
 
 @dataclass(slots=True)
@@ -16,6 +17,7 @@ class _NgramScorer:
 
     _file_name: str
     _loaded: bool = False
+    _lock: Lock = Lock()
 
     _data: dict[str, float] = field(default_factory=dict[str, float])
 
@@ -38,23 +40,24 @@ class _NgramScorer:
         module : str,default="cryptolab.scoring.data"
             The module to find the data file.
         """
-        if self._loaded:
-            return
+        with self._lock:
+            if self._loaded:
+                return
 
-        with (files(module) / self._file_name).open() as f:
-            n = 0
-            for line in f:
-                k, v = line.strip().split()
-                self._data[k] = float(v)
-                n += int(v)
+            with (files(module) / self._file_name).open() as f:
+                n = 0
+                for line in f:
+                    k, v = line.strip().split()
+                    self._data[k] = float(v)
+                    n += int(v)
 
-        k: str = ""
-        for k, v in self._data.items():
-            self._data[k] = log10(v / n)
+            k: str = ""
+            for k, v in self._data.items():
+                self._data[k] = log10(v / n)
 
-        self._ngram_len = len(k)
-        self._floor = log10(0.01 / n)
-        self._loaded = True
+            self._ngram_len = len(k)
+            self._floor = log10(0.01 / n)
+            self._loaded = True
 
     def score(self, text: str) -> float:
         """
