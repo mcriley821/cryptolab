@@ -4,8 +4,8 @@ https://en.wikipedia.org/wiki/Caesar_cipher
 
 from typing import Callable, Iterator
 
-from ..scoring.ngram import monogram_score
-from . import affine
+from cryptolab.scoring.ngram import monogram_score
+from cryptolab.substitution import affine
 
 
 def encrypt(

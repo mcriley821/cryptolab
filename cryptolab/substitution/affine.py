@@ -4,7 +4,7 @@ https://en.wikipedia.org/wiki/Affine_cipher
 
 from typing import Callable, Iterator
 
-from ..scoring.ngram import monogram_score
+from cryptolab.scoring.ngram import monogram_score
 
 
 def encrypt(

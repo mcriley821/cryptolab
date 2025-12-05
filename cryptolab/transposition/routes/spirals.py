@@ -62,7 +62,7 @@ def ccw_in(
 
 
 if __name__ == "__main__":
-    from ..route import decrypt, encrypt
+    from cryptolab.transposition.route import decrypt, encrypt
 
     text = "Defend the east wall of the castle"
     print(text, "\n")

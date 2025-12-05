@@ -54,7 +54,7 @@ def decrypt(ciphertext: str, route: Route, *, pad: str = "\0") -> str:
 
 
 if __name__ == "__main__":
-    from .routes import spirals
+    from cryptolab.transposition.routes import spirals
 
     text = "Defend the east wall of the castle"
     print(text, "\n")

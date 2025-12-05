@@ -122,8 +122,8 @@ if __name__ == "__main__":
     from random import shuffle
     from string import ascii_uppercase
 
-    from ..scoring.ngram import quadgram_score
-    from ..substitution import simple
+    from cryptolab.scoring.ngram import quadgram_score
+    from cryptolab.substitution import simple
 
     plaintext = """In simple hill climbing, the first closer node is chosen,
     whereas in steepest ascent hill climbing all successors are compared and

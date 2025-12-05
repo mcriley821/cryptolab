@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from math import ceil
 from typing import Callable
 
-from .columnar import (
+from cryptolab.transposition.columnar import (
     decrypt as col_decrypt,
 )
-from .columnar import (
+from cryptolab.transposition.columnar import (
     encrypt as col_encrypt,
 )
 

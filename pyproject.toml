@@ -21,6 +21,9 @@ strict = [
   "cryptolab/**/*"
 ]
 
+[tool.setuptools]
+py-modules = ["cryptolab"]
+
 [tool.ruff.format]
 docstring-code-format = true
 

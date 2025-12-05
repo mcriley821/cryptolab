@@ -2,7 +2,7 @@
 https://en.wikipedia.org/wiki/ROT13
 """
 
-from . import caesar
+from cryptolab.substitution import caesar
 
 
 def encrypt(

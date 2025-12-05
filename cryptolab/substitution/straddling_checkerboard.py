@@ -4,14 +4,16 @@ https://en.wikipedia.org/wiki/Straddling_checkerboard
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from functools import partial
 from itertools import combinations
 from random import choice, randint, shuffle
 from string import ascii_uppercase
 
-from ..scoring.ngram import trigram_score
-from ..utils.anneal import anneal
+from cryptolab.scoring.ngram import trigram_score
+from cryptolab.scoring.words import word_score
+from cryptolab.utils.anneal import anneal
+from cryptolab.utils.hill_climb import hill_climb
 
 
 class Board:
@@ -289,6 +291,39 @@ class Board:
         alph[a], alph[b] = alph[b], alph[a]
         return Board(self._digits, self.key, keyword="".join(alph))
 
+    def mutate(self) -> Iterator[Board]:
+        """
+        Generate all mutations of this Board.
+
+        Returns
+        -------
+        Iterator[Board]
+            A generator yielding all mutations of this Board.
+
+        Notes
+        -----
+        There are a total of 432 possible mutations:
+        * 9 digit mutations (8 replace, 1 swap)
+        * 45 key mutations
+        * 378 alphabet mutations
+        """
+        a, b = self._digits
+        for i in map(str, range(10)):
+            if i not in self._digits:
+                yield Board((a, i), self.key, keyword=self._alphabet)
+                yield Board((i, b), self.key, keyword=self._alphabet)
+        yield Board((b, a), self.key, keyword=self._alphabet)
+
+        for a, b in combinations(range(len(self._alphabet)), 2):
+            alph = list(self._alphabet)
+            alph[a], alph[b] = alph[b], alph[a]
+            yield Board(self._digits, self.key, keyword="".join(alph))
+
+        for a, b in combinations(range(len(self._key)), 2):
+            key = self.key
+            key[a], key[b] = key[b], key[a]
+            yield Board(self._digits, key, keyword=self._alphabet)
+
 
 def encrypt(plaintext: str, board: Board, *, digit_escape: str = "single") -> str:
     """
@@ -431,7 +466,8 @@ def decrypt(ciphertext: str, board: Board, *, digit_escape: str = "single") -> s
 def crack(
     ciphertext: str,
     *,
-    score: Callable[[str], float] = trigram_score,
+    score1: Callable[[str], float] = trigram_score,
+    score2: Callable[[str], float] = word_score,
     digit_escape: str = "single",
 ) -> tuple[str, Board]:
     """
@@ -453,18 +489,27 @@ def crack(
     tuple[str, Board]
         The highest scoring plaintext and corresponding Board
     """
+    dec = partial(decrypt, digit_escape=digit_escape)
+
+    _, bkey = hill_climb(
+        ciphertext,
+        Board.random,
+        Board.mutate,
+        dec,
+        score1,
+    )
 
     return anneal(
         ciphertext,
-        Board.random,
+        lambda: bkey,
         Board.random_mutation,
-        partial(decrypt, digit_escape=digit_escape),
-        score,
+        dec,
+        score2,
     )
 
 
 if __name__ == "__main__":
-    from ..scoring.words import word_score, word_segments
+    from cryptolab.scoring.words import word_score, word_segments
 
     board = Board(("1", "4"), keyword="FUBCDORA.LETHINGKYMVPS/JQZXW")
 
@@ -481,10 +526,7 @@ if __name__ == "__main__":
 
     assert dec == plaintext
 
-    def score(text: str) -> float:
-        return trigram_score(text) + word_score(text)
-
-    dec, board = crack(enc, score=score, digit_escape="triple")
+    dec, board = crack(enc, digit_escape="triple")
     print(dec)
     print(" ".join(word_segments(dec)))
     print(board.normalize())

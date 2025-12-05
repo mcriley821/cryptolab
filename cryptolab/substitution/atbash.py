@@ -2,7 +2,7 @@
 https://en.wikipedia.org/wiki/Atbash
 """
 
-from . import affine
+from cryptolab.substitution import affine
 
 
 def encrypt(

@@ -102,8 +102,8 @@ if __name__ == "__main__":
     from random import choice, shuffle
     from string import ascii_uppercase
 
-    from ..scoring.ngram import trigram_score
-    from ..substitution import simple
+    from cryptolab.scoring.ngram import trigram_score
+    from cryptolab.substitution import simple
 
     plaintext = "Simulated annealing is a probabilistic technique for approximating the global optimum of a given function. Specifically, it is a metaheuristic to approximate global optimization in a large search space for an optimization problem."
 

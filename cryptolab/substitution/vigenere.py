@@ -4,7 +4,7 @@ https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher
 
 from itertools import cycle
 
-from . import caesar
+from cryptolab.substitution import caesar
 
 
 def encrypt(
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     from random import randint, shuffle
     from string import ascii_uppercase
 
-    from ..utils.keys import keyword
+    from cryptolab.utils.keys import keyword
 
     plaintext = "ATTACK THE EAST WALL OF THE CASTLE AT DAWN"
     key = list(ascii_uppercase)

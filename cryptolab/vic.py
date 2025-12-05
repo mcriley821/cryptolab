@@ -6,31 +6,31 @@ from datetime import date
 from operator import add, sub
 from typing import Callable
 
-from .substitution.straddling_checkerboard import (
+from cryptolab.substitution.straddling_checkerboard import (
     Board,
 )
-from .substitution.straddling_checkerboard import (
+from cryptolab.substitution.straddling_checkerboard import (
     decrypt as sad_decrypt,
 )
-from .substitution.straddling_checkerboard import (
+from cryptolab.substitution.straddling_checkerboard import (
     encrypt as sad_encrypt,
 )
-from .transposition.columnar import (
+from cryptolab.transposition.columnar import (
     decrypt as col_decrypt,
 )
-from .transposition.columnar import (
+from cryptolab.transposition.columnar import (
     encrypt as col_encrypt,
 )
-from .transposition.disrupted import (
+from cryptolab.transposition.disrupted import (
     VIC,
 )
-from .transposition.disrupted import (
+from cryptolab.transposition.disrupted import (
     decrypt as dis_decrypt,
 )
-from .transposition.disrupted import (
+from cryptolab.transposition.disrupted import (
     encrypt as dis_encrypt,
 )
-from .utils.sequencing import sequence
+from cryptolab.utils.sequencing import sequence
 
 
 def _digit_op(x: str, y: str, op: Callable[[int, int], int]) -> str:

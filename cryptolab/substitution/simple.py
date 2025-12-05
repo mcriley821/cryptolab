@@ -2,7 +2,7 @@
 
 from string import ascii_uppercase
 
-from ..utils.keys import keyed_alphabet
+from cryptolab.utils.keys import keyed_alphabet
 
 
 def encrypt(

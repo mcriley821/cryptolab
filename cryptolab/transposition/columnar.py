@@ -74,7 +74,7 @@ def decrypt(key: list[int], ciphertext: str) -> str:
 
 
 if __name__ == "__main__":
-    from ..utils.sequencing import sequence
+    from cryptolab.utils.sequencing import sequence
 
     keyword = "zebras"
     input = "wearediscoveredfleeatonce"
