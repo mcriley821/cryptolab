@@ -60,37 +60,59 @@ def hill_climb(
         overall score.
     """
 
-    key = gen_key()
-    top = (-float("inf"), ciphertext, key)
+    def _single_restart(_: int) -> tuple[float, str, KeyType]:
+        """
+        Run a single restart of the hill climb algorithm.
 
-    for _ in range(restarts):
-        best_res = top
+        Parameters
+        ----------
+        index : int
+            The index of this restart. Unused.
+
+        Returns
+        -------
+        tuple[float, str, KeyType]
+            A tuple of the best (score, text, key) for this restart.
+        """
+        key = gen_key()
+
+        text = ""
+        while text == "":
+            try:
+                text = decrypt(ciphertext, key)
+            except Exception:
+                key = gen_key()
+
+        best = (score(text), text, key)
 
         for _ in range(iterations):
-            best_i = best_res
+            best_i = best
 
             for new_key in mutate(key):
                 try:
                     text = decrypt(ciphertext, new_key)
                     sc = score(text)
-
-                    if sc > best_i[0]:
-                        best_i = (sc, text, new_key)
-                        key = new_key
-                        if not try_all:
-                            break
                 except Exception:
                     continue
 
-            if best_i[0] > best_res[0]:
-                best_res = best_i
+                if sc > best_i[0]:
+                    best_i = (sc, text, new_key)
+                    key = new_key
+                    if not try_all:
+                        break
+
+            if best_i[0] > best[0]:
+                best = best_i
             else:
                 break  # no improvement
 
-        if best_res[0] > top[0]:
-            top = best_res
+        return best
 
-        key = gen_key()
+    top = _single_restart(0)
+    for i in range(1, restarts):
+        res = _single_restart(i)
+        if res[0] > top[0]:
+            top = res
 
     return top[1], top[2]
 
